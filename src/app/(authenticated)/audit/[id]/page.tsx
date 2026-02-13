@@ -19,6 +19,7 @@ export default function AuditExecutionPage({
   const [photos, setPhotos] = useState<Record<string, string>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [activePhotoItemId, setActivePhotoItemId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     const a = getAudit(id);
@@ -119,7 +120,8 @@ export default function AuditExecutionPage({
   }
 
   function handleComplete() {
-    saveProgress();
+    if (submitting) return;
+    setSubmitting(true);
 
     const allResponses = Object.values(responses);
     const passFailItems = template!.sections
@@ -150,7 +152,7 @@ export default function AuditExecutionPage({
   ).length;
 
   return (
-    <div className="pb-24 lg:pb-8">
+    <div className="pb-36 lg:pb-24">
       {/* Progress bar */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
@@ -335,13 +337,14 @@ export default function AuditExecutionPage({
       </div>
 
       {/* Navigation */}
-      <div className="fixed bottom-16 lg:bottom-0 left-0 right-0 lg:left-64 bg-white border-t border-gray-200 p-4 z-20">
+      <div className="fixed bottom-16 lg:bottom-0 left-0 right-0 lg:left-64 bg-white border-t border-gray-200 p-4 z-40">
         <div className="max-w-6xl flex gap-3">
           {currentSection > 0 && (
             <button
               type="button"
               onClick={handlePrev}
-              className="flex-1 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition"
+              disabled={submitting}
+              className="flex-1 py-3 bg-gray-100 text-gray-700 font-medium rounded-lg hover:bg-gray-200 transition disabled:opacity-50"
             >
               Previous
             </button>
@@ -358,9 +361,10 @@ export default function AuditExecutionPage({
             <button
               type="button"
               onClick={handleComplete}
-              className="flex-1 py-3 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700 transition"
+              disabled={submitting}
+              className="flex-1 py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition disabled:opacity-50"
             >
-              Complete Audit
+              {submitting ? "Submitting..." : "Complete Audit"}
             </button>
           )}
         </div>

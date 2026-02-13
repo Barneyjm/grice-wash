@@ -31,7 +31,30 @@ function load<T>(key: string): T[] {
 
 function save<T>(key: string, data: T[]) {
   if (typeof window === "undefined") return;
-  localStorage.setItem(key, JSON.stringify(data));
+  try {
+    localStorage.setItem(key, JSON.stringify(data));
+  } catch {
+    // localStorage full — strip base64 photos to free space and retry
+    const stripped = JSON.stringify(data, (k, v) => {
+      if (typeof v === "string" && v.startsWith("data:image/")) {
+        return "[photo]";
+      }
+      return v;
+    });
+    try {
+      localStorage.setItem(key, stripped);
+    } catch {
+      // still full — clear old audits and retry
+      try {
+        const audits = JSON.parse(localStorage.getItem(STORAGE_KEYS.audits) ?? "[]");
+        const recent = audits.slice(0, 50);
+        localStorage.setItem(STORAGE_KEYS.audits, JSON.stringify(recent));
+        localStorage.setItem(key, stripped);
+      } catch {
+        // give up silently rather than crash the UI
+      }
+    }
+  }
 }
 
 // --- Users ---
